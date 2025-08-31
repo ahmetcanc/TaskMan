@@ -33,6 +33,7 @@ func SetupRoutes(
 
 		// Task endpoints
 		protected.GET("/tasks", taskHandler.GetTasks)
+		protected.GET("/tasks/:id", taskHandler.GetTaskByID)
 		protected.POST("/tasks", taskHandler.CreateTask)
 		protected.PUT("/tasks/:id", taskHandler.UpdateTask)
 		protected.DELETE("/tasks/:id", taskHandler.DeleteTask)

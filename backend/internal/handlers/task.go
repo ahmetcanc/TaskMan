@@ -49,6 +49,34 @@ func (h *TaskHandler) GetTasks(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": tasks, "source": "db"})
 }
 
+func (h *TaskHandler) GetTaskByID(c *gin.Context) {
+	id := c.Param("id")
+
+	// Cache kontrolü
+	cacheKey := "task:" + id
+	cached, err := h.RDB.Get(h.Ctx, cacheKey).Result()
+	if err == nil && cached != "" {
+		var task models.Task
+		if err := json.Unmarshal([]byte(cached), &task); err == nil {
+			c.JSON(http.StatusOK, gin.H{"data": task, "source": "cache"})
+			return
+		}
+	}
+
+	// DB’den çek
+	var task models.Task
+	if err := h.DB.First(&task, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
+		return
+	}
+
+	// Cache’e ekle
+	data, _ := json.Marshal(task)
+	h.RDB.Set(h.Ctx, cacheKey, data, time.Hour)
+
+	c.JSON(http.StatusOK, gin.H{"data": task, "source": "db"})
+}
+
 // POST /tasks
 func (h *TaskHandler) CreateTask(c *gin.Context) {
 	var input struct {
