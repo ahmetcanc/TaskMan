@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Boards from "./pages/Boards";
 import Tasks from "./pages/Tasks";
 import Users from "./pages/Users";
+import TaskDetail from "./pages/TaskDetail";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
       <Route path="/boards" element={<Boards />} />
       <Route path="/tasks" element={<Tasks />} />
       <Route path="/users" element={<Users />} />
+      <Route path="/tasks/:id" element={<TaskDetail />} />
     </Routes>
   );
 }

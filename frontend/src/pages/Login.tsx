@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "./Login.css";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -23,25 +24,39 @@ function Login() {
   };
 
   return (
-    <div style={{ padding: "2rem" }}>
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <br />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <br />
-        <button type="submit">Login</button>
-      </form>
+    <div className="login-container">
+      <div className="login-card">
+        <h2 className="login-title">Hoş Geldiniz</h2>
+        <p className="login-subtitle">Hesabınıza giriş yapın</p>
+        
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="form-group">
+            <input
+              type="email"
+              placeholder="E-posta adresiniz"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="form-input"
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <input
+              type="password"
+              placeholder="Şifreniz"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="form-input"
+              required
+            />
+          </div>
+          
+          <button type="submit" className="login-button">
+            Giriş Yap
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
