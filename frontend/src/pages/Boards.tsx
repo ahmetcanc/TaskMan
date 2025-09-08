@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import "./Boards.css";
@@ -18,6 +18,121 @@ interface Board {
   Title: string;
   Tasks: Task[];
 }
+
+// Dropdown komponenti
+const TaskDropdownMenu = ({ taskId, onDelete }: { taskId: number, onDelete: (id: number) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleDelete = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.delete(`http://localhost:8080/tasks/${taskId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.status === 200) {
+        onDelete(taskId);
+        console.log('Task silindi:', taskId);
+      }
+    } catch (error) {
+      console.error('Silme hatası:', error);
+    }
+    setIsOpen(false);
+  };
+
+  const handleUpdate = () => {
+    console.log('Update task:', taskId);
+    // Burada update modal açabilir veya edit sayfasına yönlendirebilirsiniz
+    setIsOpen(false);
+  };
+
+  return (
+    <div 
+      ref={dropdownRef}
+      style={{ position: "relative", display: "inline-block" }}
+      onClick={(e) => e.preventDefault()}
+    >
+      <span
+        style={{
+          cursor: "pointer",
+          padding: "4px 8px",
+          borderRadius: "4px",
+          fontSize: "16px"
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+      >
+        ...
+      </span>
+
+      {isOpen && (
+        <div style={{
+          position: "absolute",
+          right: "0",
+          top: "100%",
+          marginTop: "2px",
+          width: "120px",
+          backgroundColor: "white",
+          border: "1px solid #ddd",
+          borderRadius: "4px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          zIndex: 1000
+        }}>
+          <button
+            onClick={handleUpdate}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              border: "none",
+              background: "none",
+              textAlign: "left",
+              cursor: "pointer",
+              fontSize: "14px",
+              borderBottom: "1px solid #eee"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f5f5f5"}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+          >
+            ✏️ Düzenle
+          </button>
+          <button
+            onClick={handleDelete}
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              border: "none",
+              background: "none",
+              textAlign: "left",
+              cursor: "pointer",
+              fontSize: "14px",
+              color: "#dc3545"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#fff5f5"}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+          >
+            🗑️ Sil
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 function Boards() {
   const [boards, setBoards] = useState<Board[]>([]);
@@ -39,6 +154,16 @@ function Boards() {
     };
     fetchBoards();
   }, []);
+
+  // Task silme fonksiyonu
+  const handleDeleteTask = (taskId: number) => {
+    setBoards(prevBoards => 
+      prevBoards.map(board => ({
+        ...board,
+        Tasks: board.Tasks.filter(task => task.ID !== taskId)
+      }))
+    );
+  };
 
   const getTasksByStatus = (tasks: Task[]) => {
     const statuses = ["todo", "in-progress", "done"];
@@ -69,8 +194,9 @@ function Boards() {
       {boards.length > 0 && (
         <div className="board-card">
           <div className="board-cover" style={{ backgroundColor: getPriorityColor() }}>
-<h2 className="board-content" style={{ textAlign: "center", width: "100%", color: "white" }}>
-BOARD</h2>
+            <h2 className="board-content" style={{ textAlign: "center", width: "100%", color: "white" }}>
+              BOARD
+            </h2>
           </div>
           <div className="board-content">
             <h2>{boards[0].Title}</h2>
@@ -78,34 +204,29 @@ BOARD</h2>
               <div key={status} className="list-preview">
                 <h3>{status} ({tasks.length})</h3>
                 <div className="cards-container">
-  {tasks.map(task => (
-    <div key={task.ID} className="card-mini" style={{ position: "relative" }}>
-      {/* Delete button */}
-      <span
-        style={{
-          position: "absolute",
-          top: "5px",
-          right: "5px",
-          cursor: "pointer",
-        }}
-        onClick={() => {
-          // şimdilik sadece console.log, backend'e bağlayabilirsin
-          console.log("Delete task ID:", task.ID);
-        }}
-      >
-        ...
-      </span>
+                  {tasks.map(task => (
+                    <div key={task.ID} className="card-mini" style={{ position: "relative" }}>
+                      {/* Dropdown menü */}
+                      <div style={{
+                        position: "absolute",
+                        top: "5px",
+                        right: "5px",
+                      }}>
+                        <TaskDropdownMenu 
+                          taskId={task.ID} 
+                          onDelete={handleDeleteTask}
+                        />
+                      </div>
 
-      <Link to={`/tasks/${task.ID}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
-        <div className="card-content">
-          <div className="card-title">{task.Title}</div>
-          {task.Description && <div className="card-description">{task.Description}</div>}
-        </div>
-      </Link>
-    </div>
-  ))}
-</div>
-
+                      <Link to={`/tasks/${task.ID}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+                        <div className="card-content">
+                          <div className="card-title">{task.Title}</div>
+                          {task.Description && <div className="card-description">{task.Description}</div>}
+                        </div>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
