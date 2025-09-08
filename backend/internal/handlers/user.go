@@ -70,10 +70,17 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
+	// Şifreyi hashle
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		return
+	}
+
 	user := models.User{
 		Name:     input.Name,
 		Email:    input.Email,
-		Password: input.Password,
+		Password: string(hashedPassword),
 	}
 
 	if err := h.DB.Create(&user).Error; err != nil {

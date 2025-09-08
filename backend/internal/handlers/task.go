@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/ahmetcanc/TaskMan/internal/models"
@@ -116,7 +117,12 @@ func (h *TaskHandler) CreateTask(c *gin.Context) {
 
 // PUT /tasks/:id
 func (h *TaskHandler) UpdateTask(c *gin.Context) {
-	id := c.Param("id")
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr) // String'i int'e çevir
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
 	var task models.Task
 
 	if err := h.DB.First(&task, id).Error; err != nil {

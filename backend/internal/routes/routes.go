@@ -19,7 +19,7 @@ func SetupRoutes(
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 	r.POST("/login", userHandler.Login)
-	r.POST("/users", userHandler.CreateUser)
+	r.POST("/register", userHandler.CreateUser)
 
 	// JWT korumalı endpoints
 	protected := r.Group("/")
