@@ -58,5 +58,5 @@ func ExamData(database *gorm.DB) {
 		}
 	}
 
-	log.Println("✅ Örnek veriler başarıyla eklendi")
+	log.Println("✅ Inserted example data")
 }
