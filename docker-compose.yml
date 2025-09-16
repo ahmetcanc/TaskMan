@@ -5,11 +5,11 @@ services:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: dbpass # todo: change
-      POSTGRES_DB: taskman
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5433:5432"
+      - "${DB_PORT_OUT}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
 
@@ -17,46 +17,44 @@ services:
     image: redis:7
     restart: always
     ports:
-      - "6380:6379"
+      - "${REDIS_PORT_OUT}:6379"
     volumes:
       - redis_data:/data
 
   backend:
     build: ./backend
     ports:
-      - "8080:8080"
+      - "${BACKEND_PORT}:8080"
     volumes:
       - ./backend:/app
     depends_on:
       - db
       - redis
     environment:
-      PORT: 8080
+      PORT: ${BACKEND_PORT}
       DB_HOST: db
-      DB_USER: postgres
-      DB_PASSWORD: dbpass # todo: change
-      DB_NAME: taskman
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
       DB_PORT: 5432
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      JWT_SECRET: supersecretkey
+      JWT_SECRET: ${JWT_SECRET}
     command: air
 
   frontend:
     build: ./frontend
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT}:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     depends_on:
       - backend
     environment:
-      - VITE_API_URL=http://localhost:8080
+      - VITE_API_URL=http://localhost:${BACKEND_PORT}
     command: npm run dev -- --host 0.0.0.0
 
 volumes:
   db_data:
   redis_data:
-
-# todo: get environments from .env file
